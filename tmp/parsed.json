@@ -1,0 +1,930 @@
+{
+  "iflow_name": "Default Collaboration",
+  "description": "Employee Mastr Data replication from Employee Central to ERP Payroll",
+  "global_config": {
+    "namespaceMapping": "xmlns:ns2=http://notification.event.successfactors.com",
+    "allowedHeaderList": "USER_ID",
+    "httpSessionHandling": "onExchange",
+    "ServerTrace": "false",
+    "returnExceptionToSender": "false",
+    "log": "All events",
+    "componentVersion": "1.1",
+    "cmdVariantUri": "ctype::IFlowVariant/cname::IFlowConfiguration/version::1.1.15"
+  },
+  "senders": [
+    {
+      "id": "Participant_5",
+      "name": "EC_PUSH_EVENT",
+      "type": "EndpointSender"
+    },
+    {
+      "id": "Participant_103",
+      "name": "Sender1",
+      "type": "EndpointSender"
+    }
+  ],
+  "receivers": [
+    {
+      "id": "Participant_2",
+      "name": "EC_CE_API_QUERY",
+      "type": "EndpointRecevier"
+    },
+    {
+      "id": "Participant_4",
+      "name": "S4_Cloud",
+      "type": "EndpointRecevier"
+    },
+    {
+      "id": "Participant_104",
+      "name": "Receiver1",
+      "type": "EndpointRecevier"
+    }
+  ],
+  "sender_adapters": [
+    {
+      "id": "MessageFlow_109",
+      "name": "ProcessDirect",
+      "source": "Participant_103",
+      "target": "StartEvent_108",
+      "component_type": "ProcessDirect",
+      "direction": "Sender",
+      "system": "Sender1",
+      "address": "{{PROCESS_DIRECT_URL}}",
+      "transport_protocol": "Not Applicable",
+      "message_protocol": "Not Applicable",
+      "authentication": "",
+      "extra": {}
+    },
+    {
+      "id": "MessageFlow_90",
+      "name": "SOAP",
+      "source": "Participant_5",
+      "target": "StartEvent_4",
+      "component_type": "SOAP",
+      "direction": "Sender",
+      "system": "EC_PUSH_EVENT",
+      "address": "{{SFSF_EC_PUSH_URL}}",
+      "transport_protocol": "HTTP",
+      "message_protocol": "SOAP 1.x",
+      "authentication": "{{AUTHENTICATION_PUSH}}",
+      "extra": {
+        "WSSecurityType": "VerifyMessage",
+        "maximumAttachmentSize": "100",
+        "useWSAddressing": "0",
+        "soapOptions": "cxfRobust",
+        "CheckTimeStamp": "0",
+        "WSSecurity_SignatureAlgorithm_Inbound": "SHA1",
+        "SigningOrder": "SignBeforeEncryption",
+        "clientCertificates": "<row><cell id='clientCertificate.subjectDN'>{{Subject_DN}}</cell><cell id='clientCertificate.issuerDN'>{{Issuer_DN}}</cell></row>",
+        "X509TokenAssertion": "WssX509V3Token10",
+        "maximumBodySize": "40",
+        "messageExchangePattern": "RequestReply",
+        "WSSecurity": "None",
+        "SaveIncomingSignedMessage": "0",
+        "SenderBasicSecurityProfileCompliant": "1",
+        "RecipientTokenIncludeStrategy": "Never",
+        "AlgorithmSuiteAssertion": "Basic128Rsa15",
+        "serviceDefinition": "Manual",
+        "userRole": "{{USER_ROLE}}",
+        "InitiatorTokenIncludeStrategy": "AlwaysToRecipient"
+      }
+    }
+  ],
+  "receiver_adapters": [
+    {
+      "id": "MessageFlow_106",
+      "name": "ProcessDirect",
+      "source": "ServiceTask_102",
+      "target": "Participant_104",
+      "component_type": "ProcessDirect",
+      "direction": "Receiver",
+      "system": "Receiver1",
+      "address": "{{PROCESS_DIRECT_URL}}",
+      "transport_protocol": "Not Applicable",
+      "message_protocol": "Not Applicable",
+      "authentication": "",
+      "extra": {}
+    },
+    {
+      "id": "MessageFlow_200",
+      "name": "Compound_API_Query",
+      "source": "ServiceTask_4",
+      "target": "Participant_2",
+      "component_type": "SuccessFactors",
+      "direction": "Receiver",
+      "system": "EC_CE_API_QUERY",
+      "address": "{{SFSF_EC_BASE_URL}}",
+      "transport_protocol": "HTTP",
+      "message_protocol": "SOAP",
+      "authentication": "{{AUTHENTICATION}}",
+      "extra": {
+        "sfsfSOAPReceiverDataCenterUrl": "Other",
+        "receiveTimeOut": "{{SFSF_EC_TIMEOUT}}",
+        "pagesize": "{{SFSF_EC_QUERY_PAGE_SIZE}}",
+        "alias": "{{SFSF_EC_LOGON_CREDENTIALS_NAME}}",
+        "urlSuffixSOAP": "/sfapi/v1/soap",
+        "query": "SELECT ${property.OBJECTS_SELECT_STATEMENT} FROM CompoundEmployee WHERE ${property.USER_ID_PARAMETER} ${property.PERSON_ID_EXTERNAL_PARAMETER} ${property.LAST_MODIFIED_DATE_PARAMETER} ${property.FILTER_PARAMETERS}",
+        "proxyType": "default",
+        "queryType": "querySync",
+        "timeOut": "1",
+        "batchProcess": "1",
+        "sfsfSoapAPIParams": "${property.SFAPI_PARAMETERS}",
+        "retryOnFailure": "1",
+        "operation": "Query",
+        "entity": "CompoundEmployee"
+      }
+    },
+    {
+      "id": "MessageFlow_93",
+      "name": "SOAP",
+      "source": "ServiceTask_94",
+      "target": "Participant_4",
+      "component_type": "SOAP",
+      "direction": "Receiver",
+      "system": "S4_Cloud",
+      "address": "{{SAP_ERP_ENDPOINT_URL}}",
+      "transport_protocol": "HTTP",
+      "message_protocol": "Plain SOAP",
+      "authentication": "{{SAP_ERP_enableBasicAuthentication_5}}",
+      "extra": {
+        "cleanupHeaders": "1",
+        "privateKeyAlias": "{{PRIVATE_KEY_ALIAS}}",
+        "location_id": "{{SAP_CC_LOCATION_ID}}",
+        "CompressMessage": "0",
+        "requestTimeout": "{{SAP_ERP_TIMEOUT}}",
+        "allowChunking": "{{SAP_ERP_allowChunking_3}}",
+        "proxyType": "{{SAP_ERP_proxyType_2}}",
+        "credentialName": "{{SAP_ERP_LOGON_CREDENTIALS_NAME}}"
+      }
+    }
+  ],
+  "processes": [
+    {
+      "id": "Process_2",
+      "name": "Create Bundle Message and Send to S4",
+      "process_type": "directCall",
+      "transaction": "From Calling Process",
+      "steps": [
+        {
+          "id": "EndEvent_12",
+          "name": "End",
+          "element_type": "endEvent",
+          "activity_type": "EndEvent",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::EndEvent"
+        },
+        {
+          "id": "CallActivity_32",
+          "name": "Remove Body",
+          "element_type": "callActivity",
+          "activity_type": "Enricher",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::Enricher"
+        },
+        {
+          "id": "ServiceTask_102",
+          "name": "Request Reply 1",
+          "element_type": "serviceTask",
+          "activity_type": "ExternalCall",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::ExternalCall/version::1.0.4"
+        },
+        {
+          "id": "StartEvent_2",
+          "name": "Start",
+          "element_type": "startEvent",
+          "activity_type": "StartEvent",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::StartEvent"
+        },
+        {
+          "id": "CallActivity_28",
+          "name": "Log S/4 Message",
+          "element_type": "callActivity",
+          "activity_type": "Script",
+          "sub_type": "GroovyScript",
+          "script": "LogPayloadERP.gsh",
+          "cmd_variant": "ctype::FlowstepVariant/cname::GroovyScript"
+        },
+        {
+          "id": "CallActivity_24",
+          "name": "Mapping of Bundle Message",
+          "element_type": "callActivity",
+          "activity_type": "Script",
+          "sub_type": "GroovyScript",
+          "script": "Mapping.gsh",
+          "cmd_variant": "ctype::FlowstepVariant/cname::GroovyScript"
+        }
+      ],
+      "error_handlers": []
+    },
+    {
+      "id": "Process_3",
+      "name": "Query Employee Master Data",
+      "process_type": "directCall",
+      "transaction": "From Calling Process",
+      "steps": [
+        {
+          "id": "EndEvent_1",
+          "name": "End",
+          "element_type": "endEvent",
+          "activity_type": "EndEvent",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::EndEvent"
+        },
+        {
+          "id": "CallActivity_2",
+          "name": "Set Execution Timestamp",
+          "element_type": "callActivity",
+          "activity_type": "Enricher",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::Enricher/version::1.1"
+        },
+        {
+          "id": "CallActivity_23",
+          "name": "Remove Body",
+          "element_type": "callActivity",
+          "activity_type": "Enricher",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::Enricher"
+        },
+        {
+          "id": "ServiceTask_4",
+          "name": "LMD Query Employee Data from CE API",
+          "element_type": "serviceTask",
+          "activity_type": "ExternalCall",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::ExternalCall"
+        },
+        {
+          "id": "CallActivity_19",
+          "name": "Call: Create Bundle Message and Send to ERP",
+          "element_type": "callActivity",
+          "activity_type": "ProcessCallElement",
+          "sub_type": "NonLoopingProcess",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::NonLoopingProcess"
+        },
+        {
+          "id": "StartEvent_3",
+          "name": "Start",
+          "element_type": "startEvent",
+          "activity_type": "StartEvent",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::StartEvent"
+        },
+        {
+          "id": "CallActivity_4",
+          "name": "Build Query",
+          "element_type": "callActivity",
+          "activity_type": "Script",
+          "sub_type": "GroovyScript",
+          "script": "SetQueryParameter.gsh",
+          "cmd_variant": "ctype::FlowstepVariant/cname::GroovyScript"
+        },
+        {
+          "id": "CallActivity_3",
+          "name": "Log Compound API Result",
+          "element_type": "callActivity",
+          "activity_type": "Script",
+          "sub_type": "GroovyScript",
+          "script": "LogPayloadCompoundResult.gsh",
+          "cmd_variant": "ctype::FlowstepVariant/cname::GroovyScript"
+        },
+        {
+          "id": "ExclusiveGateway_1",
+          "name": "Router",
+          "element_type": "exclusiveGateway",
+          "activity_type": "ExclusiveGateway",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::ExclusiveGateway"
+        },
+        {
+          "id": "ExclusiveGateway_3",
+          "name": "Router",
+          "element_type": "exclusiveGateway",
+          "activity_type": "ExclusiveGateway",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::ExclusiveGateway"
+        },
+        {
+          "id": "EndEvent_5",
+          "name": "No data found",
+          "element_type": "endEvent",
+          "activity_type": "TerminateEvent",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::TerminateEndEvent"
+        }
+      ],
+      "error_handlers": []
+    },
+    {
+      "id": "Process_113",
+      "name": "Send data to S/4",
+      "process_type": "directCall",
+      "transaction": "From Calling Process",
+      "steps": [
+        {
+          "id": "EndEvent_115",
+          "name": "End 2",
+          "element_type": "endEvent",
+          "activity_type": "EndEvent",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::EndEvent"
+        },
+        {
+          "id": "CallActivity_192",
+          "name": "Save Body",
+          "element_type": "callActivity",
+          "activity_type": "Enricher",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::Enricher/version::1.5.0"
+        },
+        {
+          "id": "StartEvent_114",
+          "name": "Start 2",
+          "element_type": "startEvent",
+          "activity_type": "StartEvent",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::StartEvent"
+        },
+        {
+          "id": "CallActivity_201",
+          "name": "wait 5 minutes",
+          "element_type": "callActivity",
+          "activity_type": "Script",
+          "sub_type": "GroovyScript",
+          "script": "script5.groovy",
+          "cmd_variant": "ctype::FlowstepVariant/cname::GroovyScript/version::1.1.1"
+        },
+        {
+          "id": "ServiceTask_94",
+          "name": "Send to S/4 HANA Cloud",
+          "element_type": "serviceTask",
+          "activity_type": "Send",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::Send"
+        }
+      ],
+      "error_handlers": [
+        {
+          "id": "SubProcess_123",
+          "name": "Exception Subprocess 1",
+          "activity_type": "ErrorEventSubProcessTemplate",
+          "steps": [
+            {
+              "id": "StartEvent_124",
+              "name": "Error Start 1",
+              "element_type": "startEvent",
+              "activity_type": "",
+              "sub_type": "",
+              "script": "",
+              "cmd_variant": ""
+            },
+            {
+              "id": "CallActivity_194",
+              "name": "Restore Body",
+              "element_type": "callActivity",
+              "activity_type": "Enricher",
+              "sub_type": "",
+              "script": "",
+              "cmd_variant": "ctype::FlowstepVariant/cname::Enricher/version::1.5.0"
+            },
+            {
+              "id": "CallActivity_180",
+              "name": "Send data to S/4",
+              "element_type": "callActivity",
+              "activity_type": "ProcessCallElement",
+              "sub_type": "NonLoopingProcess",
+              "script": "",
+              "cmd_variant": "ctype::FlowstepVariant/cname::NonLoopingProcess/version::1.0.3"
+            },
+            {
+              "id": "EndEvent_188",
+              "name": "End 5",
+              "element_type": "endEvent",
+              "activity_type": "",
+              "sub_type": "",
+              "script": "",
+              "cmd_variant": "ctype::FlowstepVariant/cname::MessageEndEvent/version::1.1.0"
+            },
+            {
+              "id": "CallActivity_156",
+              "name": "Check for exception",
+              "element_type": "callActivity",
+              "activity_type": "Script",
+              "sub_type": "GroovyScript",
+              "script": "script4.groovy",
+              "cmd_variant": "ctype::FlowstepVariant/cname::GroovyScript/version::1.0.1"
+            },
+            {
+              "id": "CallActivity_127",
+              "name": "Exception handling",
+              "element_type": "callActivity",
+              "activity_type": "Script",
+              "sub_type": "GroovyScript",
+              "script": "script1.groovy",
+              "cmd_variant": "ctype::FlowstepVariant/cname::GroovyScript/version::1.0.1"
+            },
+            {
+              "id": "ExclusiveGateway_185",
+              "name": "Router 3",
+              "element_type": "exclusiveGateway",
+              "activity_type": "ExclusiveGateway",
+              "sub_type": "",
+              "script": "",
+              "cmd_variant": "ctype::FlowstepVariant/cname::ExclusiveGateway/version::1.1.2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Process_1",
+      "name": "Scheduled Processing",
+      "process_type": "",
+      "transaction": "Not Required",
+      "steps": [
+        {
+          "id": "CallActivity_6",
+          "name": "Call: Query Employee Master Data",
+          "element_type": "callActivity",
+          "activity_type": "ProcessCallElement",
+          "sub_type": "LoopingProcess",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::LoopingProcess/version::1.1"
+        },
+        {
+          "id": "_CallActivity_40",
+          "name": "Set Process Variant 1",
+          "element_type": "callActivity",
+          "activity_type": "Enricher",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::Enricher"
+        },
+        {
+          "id": "_CallActivity_41",
+          "name": "Set empty XML",
+          "element_type": "callActivity",
+          "activity_type": "Enricher",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::Enricher"
+        },
+        {
+          "id": "CallActivity_29",
+          "name": "Call: Read External Parameters",
+          "element_type": "callActivity",
+          "activity_type": "ProcessCallElement",
+          "sub_type": "NonLoopingProcess",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::NonLoopingProcess"
+        },
+        {
+          "id": "_CallActivity_49",
+          "name": "Call: Write Last Modified Date",
+          "element_type": "callActivity",
+          "activity_type": "ProcessCallElement",
+          "sub_type": "NonLoopingProcess",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::NonLoopingProcess"
+        },
+        {
+          "id": "_CallActivity_47",
+          "name": "Call: Read Last Modified Date",
+          "element_type": "callActivity",
+          "activity_type": "ProcessCallElement",
+          "sub_type": "NonLoopingProcess",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::NonLoopingProcess"
+        },
+        {
+          "id": "EndEvent_10",
+          "name": "End",
+          "element_type": "endEvent",
+          "activity_type": "",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::MessageEndEvent"
+        },
+        {
+          "id": "CallActivity_8",
+          "name": "Initialize Loop Counter",
+          "element_type": "callActivity",
+          "activity_type": "Script",
+          "sub_type": "GroovyScript",
+          "script": "initializeLoopCounter.groovy",
+          "cmd_variant": "ctype::FlowstepVariant/cname::GroovyScript"
+        },
+        {
+          "id": "StartEvent_1",
+          "name": "Start",
+          "element_type": "startEvent",
+          "activity_type": "",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": ""
+        }
+      ],
+      "error_handlers": []
+    },
+    {
+      "id": "Process_6",
+      "name": "Write Last Modified Date",
+      "process_type": "directCall",
+      "transaction": "From Calling Process",
+      "steps": [
+        {
+          "id": "CallActivity_7",
+          "name": "Write Last Modified Date in Database",
+          "element_type": "callActivity",
+          "activity_type": "Variables",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::Variables"
+        },
+        {
+          "id": "EndEvent_6",
+          "name": "End",
+          "element_type": "endEvent",
+          "activity_type": "EndEvent",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::EndEvent"
+        },
+        {
+          "id": "EndEvent_9",
+          "name": "End",
+          "element_type": "endEvent",
+          "activity_type": "EndEvent",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::EndEvent"
+        },
+        {
+          "id": "StartEvent_6",
+          "name": "Start",
+          "element_type": "startEvent",
+          "activity_type": "StartEvent",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::StartEvent"
+        },
+        {
+          "id": "ExclusiveGateway_7",
+          "name": "Gateway",
+          "element_type": "exclusiveGateway",
+          "activity_type": "ExclusiveGateway",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::ExclusiveGateway"
+        }
+      ],
+      "error_handlers": []
+    },
+    {
+      "id": "Process_7",
+      "name": "Read External Parameters",
+      "process_type": "directCall",
+      "transaction": "From Calling Process",
+      "steps": [
+        {
+          "id": "EndEvent_7",
+          "name": "End",
+          "element_type": "endEvent",
+          "activity_type": "EndEvent",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::EndEvent"
+        },
+        {
+          "id": "CallActivity_27",
+          "name": "Set External Parameters",
+          "element_type": "callActivity",
+          "activity_type": "Enricher",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::Enricher"
+        },
+        {
+          "id": "StartEvent_7",
+          "name": "Start",
+          "element_type": "startEvent",
+          "activity_type": "StartEvent",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::StartEvent"
+        },
+        {
+          "id": "CallActivity_10",
+          "name": "Log External Parameters",
+          "element_type": "callActivity",
+          "activity_type": "Script",
+          "sub_type": "GroovyScript",
+          "script": "logExternalParameters.groovy",
+          "cmd_variant": "ctype::FlowstepVariant/cname::GroovyScript"
+        }
+      ],
+      "error_handlers": []
+    },
+    {
+      "id": "Process_4",
+      "name": "Push Processing",
+      "process_type": "",
+      "transaction": "Not Required",
+      "steps": [
+        {
+          "id": "CallActivity_21",
+          "name": "Set Response Body",
+          "element_type": "callActivity",
+          "activity_type": "Enricher",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::Enricher"
+        },
+        {
+          "id": "_CallActivity_42",
+          "name": "Get User ID",
+          "element_type": "callActivity",
+          "activity_type": "Enricher",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::Enricher"
+        },
+        {
+          "id": "CallActivity_1",
+          "name": "Call: Read External Parameters",
+          "element_type": "callActivity",
+          "activity_type": "ProcessCallElement",
+          "sub_type": "NonLoopingProcess",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::NonLoopingProcess"
+        },
+        {
+          "id": "_CallActivity_43",
+          "name": "Call: Query Employee Master Data",
+          "element_type": "callActivity",
+          "activity_type": "ProcessCallElement",
+          "sub_type": "NonLoopingProcess",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::NonLoopingProcess"
+        },
+        {
+          "id": "EndEvent_4",
+          "name": "End",
+          "element_type": "endEvent",
+          "activity_type": "",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::MessageEndEvent"
+        },
+        {
+          "id": "_CallActivity_45",
+          "name": "Log Payload Push Event",
+          "element_type": "callActivity",
+          "activity_type": "Script",
+          "sub_type": "GroovyScript",
+          "script": "LogPayloadPushEvent.gsh",
+          "cmd_variant": "ctype::FlowstepVariant/cname::GroovyScript"
+        },
+        {
+          "id": "StartEvent_4",
+          "name": "Start Event 4",
+          "element_type": "startEvent",
+          "activity_type": "",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::MessageStartEvent"
+        }
+      ],
+      "error_handlers": []
+    },
+    {
+      "id": "Process_5",
+      "name": "Read Last Modified Date",
+      "process_type": "directCall",
+      "transaction": "From Calling Process",
+      "steps": [
+        {
+          "id": "EndEvent_3",
+          "name": "End",
+          "element_type": "endEvent",
+          "activity_type": "EndEvent",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::EndEvent"
+        },
+        {
+          "id": "_CallActivity_46",
+          "name": "Read Last Modified Date",
+          "element_type": "callActivity",
+          "activity_type": "Enricher",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::Enricher"
+        },
+        {
+          "id": "StartEvent_5",
+          "name": "Start",
+          "element_type": "startEvent",
+          "activity_type": "StartEvent",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::StartEvent"
+        }
+      ],
+      "error_handlers": []
+    },
+    {
+      "id": "Process_98",
+      "name": "Process S/4 data",
+      "process_type": "",
+      "transaction": "Not Required",
+      "steps": [
+        {
+          "id": "CallActivity_196",
+          "name": "Get external parameter",
+          "element_type": "callActivity",
+          "activity_type": "Enricher",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::Enricher/version::1.5.0"
+        },
+        {
+          "id": "CallActivity_118",
+          "name": "Send data to S/4",
+          "element_type": "callActivity",
+          "activity_type": "ProcessCallElement",
+          "sub_type": "NonLoopingProcess",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::NonLoopingProcess/version::1.0.3"
+        },
+        {
+          "id": "EndEvent_130",
+          "name": "End 4",
+          "element_type": "endEvent",
+          "activity_type": "",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::MessageEndEvent/version::1.1.0"
+        },
+        {
+          "id": "CallActivity_151",
+          "name": "Init Exception counter",
+          "element_type": "callActivity",
+          "activity_type": "Script",
+          "sub_type": "GroovyScript",
+          "script": "script3.groovy",
+          "cmd_variant": "ctype::FlowstepVariant/cname::GroovyScript/version::1.0.1"
+        },
+        {
+          "id": "StartEvent_108",
+          "name": "Start 1",
+          "element_type": "startEvent",
+          "activity_type": "",
+          "sub_type": "",
+          "script": "",
+          "cmd_variant": "ctype::FlowstepVariant/cname::MessageStartEvent"
+        }
+      ],
+      "error_handlers": []
+    }
+  ],
+  "routing_conditions": [
+    {
+      "id": "SequenceFlow_5",
+      "name": "Data found",
+      "source": "ExclusiveGateway_1",
+      "target": "ExclusiveGateway_3",
+      "expression_type": "XML",
+      "condition": "/queryCompoundEmployeeResponse/CompoundEmployee"
+    },
+    {
+      "id": "SequenceFlow_13",
+      "name": "last modified date update",
+      "source": "ExclusiveGateway_3",
+      "target": "CallActivity_2",
+      "expression_type": "NonXML",
+      "condition": "${property.PERSON_ID_EXTERNAL} = '' and ${property.USER_ID} = ''"
+    },
+    {
+      "id": "SequenceFlow_186",
+      "name": "Route 1",
+      "source": "ExclusiveGateway_185",
+      "target": "CallActivity_194",
+      "expression_type": "NonXML",
+      "condition": "${property.EXCEPTION_COUNTER} <= '3'"
+    },
+    {
+      "id": "SequenceFlow_86",
+      "name": "new timestamp",
+      "source": "ExclusiveGateway_7",
+      "target": "CallActivity_7",
+      "expression_type": "NonXML",
+      "condition": "${property.EXECUTION_TIMESTAMP} != null and ${property.EXECUTION_TIMESTAMP} != ''"
+    }
+  ],
+  "scripts": [
+    {
+      "filename": "CustomFunctions.gsh",
+      "path": "iflow_inner/src/main/resources/script/CustomFunctions.gsh",
+      "type": "groovy",
+      "summary": "CustomFunctions.gsh is a Groovy/GSH script used in an SAP CPI iFlow. No properties, headers, or explicit error handling detected."
+    },
+    {
+      "filename": "GenerateSAPMessageID.gsh",
+      "path": "iflow_inner/src/main/resources/script/GenerateSAPMessageID.gsh",
+      "type": "groovy",
+      "summary": "GenerateSAPMessageID.gsh is a Groovy/GSH script used in an SAP CPI iFlow. It sets headers: SapMessageId, SapMessageIdEx."
+    },
+    {
+      "filename": "initializeLoopCounter.groovy",
+      "path": "iflow_inner/src/main/resources/script/initializeLoopCounter.groovy",
+      "type": "groovy",
+      "summary": "initializeLoopCounter.groovy is a Groovy/GSH script used in an SAP CPI iFlow. It sets properties: loopCounter."
+    },
+    {
+      "filename": "logExternalParameters.groovy",
+      "path": "iflow_inner/src/main/resources/script/logExternalParameters.groovy",
+      "type": "groovy",
+      "summary": "logExternalParameters.groovy is a Groovy/GSH script used in an SAP CPI iFlow. It reads properties: COMPANY, COMPANY_TERRITORY_CODE, CONTINGENT_WORKERS, EMPLOYEE_CLASS, ENABLE_LOGGING, ENABLE_TIME_DEPENDENT_EMPLOYEE_SELECTION, EXTERNAL_COST_CENTER_ID_USAGE, FULL_TRANSMISSION_START_DATE…. It sets properties: USER_ID. Notable calls: messageLog.addAttachmentAsString."
+    },
+    {
+      "filename": "LogPayloadCompoundResult.gsh",
+      "path": "iflow_inner/src/main/resources/script/LogPayloadCompoundResult.gsh",
+      "type": "groovy",
+      "summary": "LogPayloadCompoundResult.gsh is a Groovy/GSH script used in an SAP CPI iFlow. It reads properties: ENABLE_LOGGING, PROCESS_VARIANT, loopCounter. It sets properties: loopCounter. It validates inputs and raises errors such as: \"process_variant property undefined\". Notable calls: messageLog.addAttachmentAsString."
+    },
+    {
+      "filename": "LogPayloadERP.gsh",
+      "path": "iflow_inner/src/main/resources/script/LogPayloadERP.gsh",
+      "type": "groovy",
+      "summary": "LogPayloadERP.gsh is a Groovy/GSH script used in an SAP CPI iFlow. It reads properties: ENABLE_LOGGING, PROCESS_VARIANT, loopCounter. It validates inputs and raises errors such as: \"process_variant property undefined\". Notable calls: messageLog.addAttachmentAsString."
+    },
+    {
+      "filename": "LogPayloadPushEvent.gsh",
+      "path": "iflow_inner/src/main/resources/script/LogPayloadPushEvent.gsh",
+      "type": "groovy",
+      "summary": "LogPayloadPushEvent.gsh is a Groovy/GSH script used in an SAP CPI iFlow. It reads properties: ENABLE_LOGGING, USER_ID. It sets properties: loopCounter. It validates inputs and raises errors such as: \"Invalid push event message. The user ID could not be read, please check the conf\". Notable calls: messageLog.addAttachmentAsString."
+    },
+    {
+      "filename": "Mapping.gsh",
+      "path": "iflow_inner/src/main/resources/script/Mapping.gsh",
+      "type": "groovy",
+      "summary": "Mapping.gsh is a Groovy/GSH script used in an SAP CPI iFlow. It reads properties: EXTENSIBILITY_USAGE, FULL_TRANSMISSION_START_DATE, REPLICATION_TARGET_SYSTEM. It sets headers: SapMessageId, SapMessageIdEx."
+    },
+    {
+      "filename": "script1.groovy",
+      "path": "iflow_inner/src/main/resources/script/script1.groovy",
+      "type": "groovy",
+      "summary": "script1.groovy is a Groovy/GSH script used in an SAP CPI iFlow. It sets properties: EXCEPTION_COUNTER."
+    },
+    {
+      "filename": "script2.groovy",
+      "path": "iflow_inner/src/main/resources/script/script2.groovy",
+      "type": "groovy",
+      "summary": "script2.groovy is a Groovy/GSH script used in an SAP CPI iFlow. It validates inputs and raises errors such as: \"HTTP Status Code 500\"."
+    },
+    {
+      "filename": "script3.groovy",
+      "path": "iflow_inner/src/main/resources/script/script3.groovy",
+      "type": "groovy",
+      "summary": "script3.groovy is a Groovy/GSH script used in an SAP CPI iFlow. It sets properties: EXCEPTION_COUNTER."
+    },
+    {
+      "filename": "script4.groovy",
+      "path": "iflow_inner/src/main/resources/script/script4.groovy",
+      "type": "groovy",
+      "summary": "script4.groovy is a Groovy/GSH script used in an SAP CPI iFlow. It validates inputs and raises errors such as: \"Exception occured. Maximum number of retries failed.\"."
+    },
+    {
+      "filename": "script5.groovy",
+      "path": "iflow_inner/src/main/resources/script/script5.groovy",
+      "type": "groovy",
+      "summary": "script5.groovy is a Groovy/GSH script used in an SAP CPI iFlow. No properties, headers, or explicit error handling detected."
+    },
+    {
+      "filename": "SetQueryParameter.gsh",
+      "path": "iflow_inner/src/main/resources/script/SetQueryParameter.gsh",
+      "type": "groovy",
+      "summary": "SetQueryParameter.gsh is a Groovy/GSH script used in an SAP CPI iFlow. It reads properties: COMPANY, COMPANY_TERRITORY_CODE, CONTINGENT_WORKERS, EMPLOYEE_CLASS, ENABLE_LOGGING, ENABLE_TIME_DEPENDENT_EMPLOYEE_SELECTION, EXTERNAL_COST_CENTER_ID_USAGE, FULL_TRANSMISSION_START_DATE…. It sets properties: FILTER_PARAMETERS, LAST_MODIFIED_DATE_PARAMETER, OBJECTS_SELECT_STATEMENT, PERSON_ID_EXTERNAL_PARAMETER, SFAPI_PARAMETERS, USER_ID, USER_ID_PARAMETER. It validates inputs and raises errors such as: \"Configuration Error: Please enter FULL_TRANSMISSION_START_DATE in the format yyy\". Notable calls: messageLog.setStringProperty."
+    }
+  ]
+}
